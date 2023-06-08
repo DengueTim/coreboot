@@ -15,9 +15,16 @@ chip soc/intel/tigerlake
 
 	# FSP configuration
 	register "eist_enable" = "1"
-	register "SaGv" = "SaGv_Enabled"
+	register "SaGv" = "SaGv_Enabled" # Does disabling this give faster boots...?
 	register "enable_c6dram" = "1"
-	register "s0ix_enable" = "1"	# S3 state is broken on production silicon!
+	# Seems to sleep okay but doesn't wake. Error:
+	# [ERROR]  Failed to recover CBMEM in S3 resume.
+	# Digging deeper on resume coreboot doesn't find it's IMD. The imd_root_pointer_valid() fails to match the IMD_ROOT_PTR_MAGIC number...
+	register "s0ix_enable" = "0"	# S3 state is broken on production silicon!
+	register "deep_s3_enable_ac" = "1"
+	register "deep_s3_enable_dc" = "1"
+	register "deep_s5_enable_ac" = "1"
+	register "deep_s5_enable_dc" = "1"
 
         register "pmc_gpe0_dw0" = "PMC_GPP_R"
         register "pmc_gpe0_dw1" = "PMC_GPP_B"
@@ -28,6 +35,24 @@ chip soc/intel/tigerlake
 
 	# GPU settings
 	register "SkipExtGfxScan" = "0"
+
+	register "common_soc_config" = "{
+		.i2c[0] = {
+			.speed = I2C_SPEED_FAST,
+		},
+		.i2c[1] = {
+			.speed = I2C_SPEED_FAST,
+		},
+		.i2c[2] = {
+			.speed = I2C_SPEED_FAST,
+		},
+		.i2c[3] = {
+			.speed = I2C_SPEED_FAST,
+		},
+		.i2c[5] = {
+			.speed = I2C_SPEED_FAST,
+		},
+	}"
 
 	device cpu_cluster 0 on end
 	device domain 0 on
@@ -44,42 +69,66 @@ chip soc/intel/tigerlake
 			register "DdiPortBDdc" = "0"
 		end
 
-		device ref dptf off end
+		device ref dptf off
 			register "dptf_enable" = "0"
+		end
 
+		device ref gna off end
 
-		# M.2 Gen4 (SoC)
+		# M.2 Gen4 (SoC) 06.0 CPU PCIe Controller #0
+		# Not working.
+		# With a PM981a SSD we get an SMI that coreboot doesn't have a handler for:
+		# [DEBUG]  SMI_STS: PCI_EXP_SMI 
+		# [DEBUG]  SMI_STS[20] occurred, but no handler available.
+		# With a Skhynix bc801 PCIe v4 SSD we seem to get a packet that isn't 4kb?! Don't know what this means. Could simply be that NvmExpressDxe version doesn't support Gen4?!
+		# DXE_ASSERT!: [NvmExpressDxe] /home/tp/src/coreboot.elly/payloads/external/edk2/workspace/mrchromebox/MdeModulePkg/Bus/Pci/NvmExpressDxe/NvmExpressHci.c (772): (Private->Cap.Mpsmin + 12) <= 12
+		# The same drives in the Chipset M.2 slot work okay...
 		device ref peg0 on
 			register "PcieClkSrcUsage[2]" = "0x40"
 			register "PcieClkSrcClkReq[2]" = "PCIE_CLK_NOTUSED"
 		end
 		
-		# PCI-E x16 Gen4
+		# PCI-E x16 Gen4 01.0 CPU PCIe Controller #1
 		device ref peg1 on
 			register "PcieClkSrcUsage[0]" = "0x41"
 			register "PcieClkSrcClkReq[0]" = "PCIE_CLK_NOTUSED"
+
 		end
 
-		# Realtek GbE
+		# M.2 Gen3 Wifi (Chipset) 1d.0
+		device ref pcie_rp9 on
+			register "PcieRpEnable[8]" = "1"
+			register "PcieRpLtrEnable[8]" = "1"
+			register "PcieClkSrcUsage[5]" = "8" # Found by TAE
+			register "PcieClkSrcClkReq[5]" = "5"
+			register "PcieRpSlotImplemented[8]" = "1"
+		end
+
+		# Realtek GbE (Chipset) 1d.2
 		device ref pcie_rp11 on
 			register "PcieRpEnable[10]" = "1"
 			register "PcieRpLtrEnable[10]" = "1"
-			register "PcieClkSrcUsage[3]" = "0x80"
-			register "PcieClkSrcClkReq[3]" = "PCIE_CLK_NOTUSED"
+			register "PcieClkSrcUsage[3]" = "10"
+			register "PcieClkSrcClkReq[3]" = "3"
 		end
 
-		# M.2 Gen3 (Chipset)
+		# M.2 Gen3 SSD (Chipset) 1c.4 remaps to 1c.0...
 		device ref pcie_rp5 on
 			register "PcieRpEnable[4]" = "1"
 			register "PcieRpLtrEnable[4]" = "1"
-			register "PcieClkSrcUsage[4]" = "0x80"
-			register "PcieClkSrcClkReq[4]" = "PCIE_CLK_NOTUSED"
+			register "PcieClkSrcUsage[4]" = "4"
+			register "PcieClkSrcClkReq[4]" = "4"
+			register "PcieRpSlotImplemented[4]" = "1"
 		end
 
+		# TODO. PCI-E x1 Gen3 (Chipset) slot..
+
+		# 0d.0
 		device ref north_xhci on
 			register "TcssXhciEn" = "1"
 		end
 
+		# 14.0
 		device ref south_xhci on
 			# USB2
 			register "usb2_ports[0]" = "USB2_PORT_MAX(OC0)"
@@ -97,14 +146,44 @@ chip soc/intel/tigerlake
 			register "usb3_ports[5]" = "USB3_PORT_DEFAULT(OC_SKIP)"
                 end
 
+		# 14.2
 		device ref shared_ram on end
-		device ref cnvi_wifi off end
-		device ref i2c0 on end
-		device ref i2c1 on end
-		device ref i2c2 on end
-		device ref i2c3 on end
+
+		# CNVI Wifi in M.2 wifi slot (Chipset) 14.3
+		# This doesn't enable detection of CNVI cards...
+		# -> Static device PCI: 00:14.3 not found, disabling it.
+		device ref cnvi_wifi on
+			register "CnviBtCore" = "true"
+			register "CnviBtAudioOffload" = "true"
+			chip drivers/wifi/generic
+				register "wake" = "GPE0_PME_B0"
+				device generic 0 on end
+			end
+		end
+
+		# 15.0  Is there any value in making these serial buses visible...?
+		device ref i2c0 on
+			register "SerialIoI2cMode[PchSerialIoIndexI2C0]" = "PchSerialIoPci"
+		end
+
+		# 15.1
+		device ref i2c1 on
+			register "SerialIoI2cMode[PchSerialIoIndexI2C1]" = "PchSerialIoPci"
+		end
+
+		# 15.2
+		device ref i2c2 on
+			register "SerialIoI2cMode[PchSerialIoIndexI2C2]" = "PchSerialIoPci"
+		end
+
+		# 15.3
+		device ref i2c3 on
+			register "SerialIoI2cMode[PchSerialIoIndexI2C3]" = "PchSerialIoPci"
+		end
+
 		device ref heci1 on end
 
+		# 17.0
 		device ref sata on
 			 register "SataPortsEnable[0]" = "1"
 			 register "SataPortsEnable[1]" = "1"
@@ -117,12 +196,29 @@ chip soc/intel/tigerlake
 			 register "SataPortsDevSlp[3]" = "1"
 		end
 
-		device ref i2c4 on end
-		device ref i2c5 on end
-		device ref uart0 on end
-		device ref uart2 off end
-		device ref gspi1 on end
+		# 19.0
+		device ref i2c4 on
+			register "SerialIoI2cMode[PchSerialIoIndexI2C4]" = "PchSerialIoPci"
+		end
 
+		# 19.2
+		device ref i2c5 on
+			register "SerialIoI2cMode[PchSerialIoIndexI2C5]" = "PchSerialIoPci"
+		end
+
+		# 1e.0
+		device ref uart0 on
+			register "SerialIoUartMode[PchSerialIoIndexUART0]" = "PchSerialIoPci"
+		end
+
+		device ref uart2 off end
+
+		# 1e.3
+		device ref gspi1 on
+			register "SerialIoGSpiMode[PchSerialIoIndexGSPI1]" = "PchSerialIoPci"
+		end
+
+		# 1f.0
 		device ref pch_espi on #LPC/eSPI
 			chip superio/ite/it8613e
 				device pnp 2e.0 on end
@@ -131,33 +227,31 @@ chip soc/intel/tigerlake
 					irq 0x70 = 4
 					irq 0xf0 = 1
 				end
-				device pnp 2e.4 on # Environment
-					io 0x60 = 0xa30
-					io 0x62 = 0xa20
-					irq 0x70 = 0
-					irq 0xf0 = 8
+				device pnp 2e.4 off # Environment
 				end
 				device pnp 2e.5 off end # Keyboard
 				device pnp 2e.6 off end # Mouse
-				device pnp 2e.7 on	# GPIO
-					io 0x60 = 0xa10
-					io 0x62 = 0xa00
-					irq 0x70 = 0
+				device pnp 2e.7 off	# GPIO
 				end
-				device pnp 2e.a on	 # CIR
-					io 0x60 = 0x310
-					irq 0x70 = 0
-					irq 0xf0 = 6
+				device pnp 2e.a off	 # CIR
 				end
 			end
 		end
-		device ref p2sb on end
-		device ref hda on
+
+		# 1f.1
+		device ref p2sb off end
+
+		# 1f.3
+		device ref hda on 
 			subsystemid 0x10ec 0x3000
-			register "PchHdaAudioLinkHdaEnable" = "1"
-			register "PchHdaDspEnable" = "0"
+			register "PchHdaAudioLinkHdaEnable" = "0"
+			register "PchHdaDspEnable" = "1"
 		end
+
+		# 1f.4
 		device ref smbus on end
+
+		# 1f.5
 		device ref fast_spi on end
 	end
 end
