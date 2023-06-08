@@ -706,14 +706,15 @@ const char *const tigerlake_pch_h_group_a_names[] = {
 	"GPP_A12",		"ESPI_ALERT2#",		"n/a",
 	"GPP_A13",		"ESPI_ALERT3#",		"n/a",
 	"GPP_A14",		"n/a",			"IMGCLKOUT0",
-	"SPI0_CLK_LOOPBK",	"SPI0_CLK_LOOPBK",	"n/a",
-	"ESPI_CLK_LOOPBK",	"ESPI_CLK_LOOPBK",	"n/a",
+//	"SPI0_CLK_LOOPBK",	"SPI0_CLK_LOOPBK",	"n/a",
+//	"ESPI_CLK_LOOPBK",	"ESPI_CLK_LOOPBK",	"n/a",
 };
 
 const struct gpio_group tigerlake_pch_h_group_a = {
 	.display	= "------- GPIO Group GPP_A -------",
 	.pad_count	= ARRAY_SIZE(tigerlake_pch_h_group_a_names) / 3,
 	.func_count	= 3,
+	.pad_offset = 0x680,
 	.pad_names	= tigerlake_pch_h_group_a_names,
 };
 
@@ -742,8 +743,8 @@ const char *const tigerlake_pch_h_group_b_names[] = {
 	"GPP_B21",		"GSPI1_MISO",		"n/a",
 	"GPP_B22",		"GSPI1_MOSI",		"n/a",
 	"GPP_B23",		"SML1ALERT#",		"PCHHOT#",
-	"GSPI0_CLK_LOOPBK",	"GSPI0_CLK_LOOPBK",	"n/a",
-	"GSPI1_CLK_LOOPBK",	"GSPI1_CLK_LOOPBK",	"n/a",
+//	"GSPI0_CLK_LOOPBK",	"GSPI0_CLK_LOOPBK",	"n/a",
+//	"GSPI1_CLK_LOOPBK",	"GSPI1_CLK_LOOPBK",	"n/a",
 };
 
 const struct gpio_group tigerlake_pch_h_group_b = {
@@ -784,6 +785,7 @@ const struct gpio_group tigerlake_pch_h_group_c = {
 	.display	= "------- GPIO Group GPP_C -------",
 	.pad_count	= ARRAY_SIZE(tigerlake_pch_h_group_c_names) / 5,
 	.func_count	= 5,
+	.pad_offset = 0x7a0,
 	.pad_names	= tigerlake_pch_h_group_c_names,
 };
 
@@ -813,8 +815,8 @@ const char *const tigerlake_pch_h_group_d_names[] = {
 	"GPP_D22",		"UART3_RTS#", 		"THC1_SPI2_RST#",	"n/a",			"n/a",
 	"GPP_D23",		"UART3_CTS#",		"THC1_SPI2_INT#",	"n/a",			"n/a",
 	/* Below are just guesses */
-	"SPI1_CLK_LOOPBK",	"n/a",			"THC0_CLK_LOOPBK",	"n/a",		"n/a",
-	"GPI3_CLK_LOOPBK",	"n/a",			"THC1_CLK_LOOPBK",	"n/a",		"n/a",
+//	"SPI1_CLK_LOOPBK",	"n/a",			"THC0_CLK_LOOPBK",	"n/a",		"n/a",
+//	"GPI3_CLK_LOOPBK",	"n/a",			"THC1_CLK_LOOPBK",	"n/a",		"n/a",
 };
 
 const struct gpio_group tigerlake_pch_h_group_d = {
@@ -1039,6 +1041,7 @@ const struct gpio_group tigerlake_pch_h_group_r = {
 	.display	= "------- GPIO Group GPP_R -------",
 	.pad_count	= ARRAY_SIZE(tigerlake_pch_h_group_r_names) / 5,
 	.func_count	= 5,
+	.pad_offset = 0x790,
 	.pad_names	= tigerlake_pch_h_group_r_names,
 };
 
@@ -1285,7 +1288,7 @@ const struct gpio_group *const tigerlake_pch_h_community_0_groups[] = {
 	&tigerlake_pch_h_group_a,
 	&tigerlake_pch_h_group_r,
 	&tigerlake_pch_h_group_b,
-	&tigerlake_pch_h_group_vgpio0,
+	//&tigerlake_pch_h_group_vgpio0,
 };
 
 const struct gpio_community tigerlake_pch_h_community_0 = {
@@ -1300,7 +1303,7 @@ const struct gpio_group *const tigerlake_pch_h_community_1_groups[] = {
 	&tigerlake_pch_h_group_c,
 	&tigerlake_pch_h_group_s,
 	&tigerlake_pch_h_group_g,
-	&tigerlake_pch_h_group_vgpio,
+	//&tigerlake_pch_h_group_vgpio,
 };
 const struct gpio_community tigerlake_pch_h_community_1 = {
 	.name		= "------- GPIO Community 1 -------",
@@ -1323,7 +1326,7 @@ const struct gpio_community tigerlake_pch_h_community_2 = {
 const struct gpio_group *const tigerlake_pch_h_community_3_groups[] = {
 	&tigerlake_pch_h_group_e,
 	&tigerlake_pch_h_group_f,
-	&tigerlake_pch_h_group_vgpio3,
+	//&tigerlake_pch_h_group_vgpio3,
 };
 
 const struct gpio_community tigerlake_pch_h_community_3 = {
@@ -1348,8 +1351,8 @@ const struct gpio_community tigerlake_pch_h_community_4 = {
 
 const struct gpio_group *const tigerlake_pch_h_community_5_groups[] = {
 	&tigerlake_pch_h_group_i,
-	&tigerlake_pch_h_group_jtag,
-	&tigerlake_pch_h_group_cpu,
+//	&tigerlake_pch_h_group_jtag,
+//	&tigerlake_pch_h_group_cpu,
 };
 
 const struct gpio_community tigerlake_pch_h_community_5 = {
